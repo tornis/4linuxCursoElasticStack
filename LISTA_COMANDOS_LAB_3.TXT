@@ -1,0 +1,209 @@
+CRIANDO INDICES
+curl -X PUT http://20.0.0.131:9200/teste?pretty
+curl -X PUT http://20.0.0.131:9200/teste2?pretty
+curl -X PUT http://20.0.0.131:9200/teste3?pretty
+
+CONSULTANDO INDICES
+curl -X GET http://20.0.0.131:9200/teste?pretty
+
+REMOVEDO UM INDICE
+curl -X DELETE http://20.0.0.131:9200/teste?pretty
+curl -X DELETE http://20.0.0.131:9200/teste2?pretty 
+curl -X DELETE http://20.0.0.131:9200/teste3?pretty
+
+
+INSERINDO DOCUMENTO
+curl -X POST "http://locallhost:9200/banco/tabela/codigo01?pretty" -H 'Content-Type: application/json'  -d "{ \"nome\":\"fulano\"}" 
+
+ATUALIZANDO DOCUMENTO
+curl -X POST "http://20.0.0.131:9200/banco/tabela/codigo01?pretty" -H 'Content-Type: application/json'  -d "{ \"nome\":\"fulano\"}"
+
+CONSULTANDO DOCUMENTO
+curl -X POST "http://20.0.0.131:9200/banco/_search?pretty" -H 'Content-Type: application/json'  -d "{ \"query\": { \"match\" : { \"chave\" : \"valor2\" }}}"
+
+DELETANDO DOCUMENTO
+curl -X DELETE "http://20.0.0.131:9200/banco/tabela/codigo01?pretty"
+
+CONSULTANDO SETTINGS DO INDICE
+curl -X GET http://20.0.0.131:9200/teste?pretty
+
+EDITANDO SETTINGS DO INDICE
+curl -X PUT "http://20.0.0.131:9200/teste/_settings" -H 'Content-Type: application/json' -d '{"number_of_replicas": 0}'
+curl -X PUT "http://20.0.0.131:9200/teste/_settings?pretty" -H 'Content-Type: application/json' -d '{"number_of_shards": 1}'
+
+
+CRIANDO TEMPLATE DINAMICO
+curl -X PUT "http://20.0.0.131:9200/_template/meu_template" -H 'Content-Type: application/json' -d @meu_template.json
+curl -X GET "http://20.0.0.131:9200/_template/meu_template?pretty"
+
+**************** meu_template.json *******************
+{
+  "template": "banco*",
+  "mappings": {
+    "meu_tipo": {
+      "dynamic_templates": [
+        {
+          "regra1": {
+            "match": "nome*",
+            "mapping": {
+              "type": "text"
+            }
+          }
+        },
+	{
+          "regra2": {
+            "match": "cpf*",
+            "mapping": {
+              "type": "long"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+******************************************************
+
+
+
+
+
+
+
+CRIANDO INDICE COM MAPEAMENTO POR CAMPO
+
+curl -X PUT "http://20.0.0.131:9200/matriz?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+{
+  "mappings": {
+    "parceiro": {
+      "properties": {
+        "tipo_parceiro" : {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}
+EOF
+
+curl -X PUT "http://20.0.0.131:9200/filial?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+{
+  "mappings": {
+    "parceiro": {
+      "properties": {
+        "tipo_parceiro" : {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}
+EOF
+
+# INSERINDO DOCUMENTO NO INDICE MATRIZ
+
+curl -X PUT "http://10.10.10.2:9200/matriz/parceiro/1?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+{
+    "codigo" : "0001",
+    "nome" : "Juquinha da Selva",
+    "tipo_parceiro" : "VIP"
+}
+EOF
+
+curl -X PUT "http://20.0.0.131:9200/matriz/parceiro/2?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+{
+    "codigo" : "0002",
+    "nome" : "Gabi Gol",
+    "tipo_parceiro" : "GOLD"
+}
+EOF
+
+curl -X PUT "http://20.0.0.131:9200/matriz/parceiro/3?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+{
+    "codigo" : "0003",
+    "nome" : "Marcus das Neves",
+    "tipo_parceiro" : "VIP"
+}
+EOF
+
+# Dados da Filial
+
+curl -X PUT "http://20.0.0.131:9200/filial/parceiro/1?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+{
+    "codigo" : "0001",
+    "nome" : "Juquinha da Selva FILIAL",
+    "tipo_parceiro" : "VIP"
+}
+EOF
+
+curl -X PUT "http://20.0.0.131:9200/filial/parceiro/2?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+{
+    "codigo" : "0002",
+    "nome" : "Gabi Gol FILIAL",
+    "tipo_parceiro" : "GOLD"
+}
+EOF
+
+curl -X PUT "http://20.0.0.131:9200/filial/parceiro/3?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+{
+    "codigo" : "0003",
+    "nome" : "Marcus das Neves FILIAL",
+    "tipo_parceiro" : "VIP"
+}
+EOF
+
+
+ALIASES SIMPLES PARA MULTIPLOS INDICES
+
+curl -X POST "http://20.0.0.131:9200/_aliases" -H 'Content-Type: application/json' -d@- <<EOF
+{
+    "actions" : [
+        { "add" : { "index" : "matriz", "alias" : "empresas" } },
+        { "add" : { "index" : "filial", "alias" : "empresas" } }
+    ]
+} 
+EOF
+
+
+CRIANDO ALIASES COM FILTRAGEM POR TERMO
+
+curl -X POST "http://20.0.0.131:9200/_aliases?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+{
+    "actions" : [
+        {
+            "add" : {
+                 "indices" : ["matriz","filial"],
+                 "alias" : "vip",
+                 "filter" : { "term" : { "tipo_parceiro" : "VIP" }}
+            }
+        }
+    ]
+}
+EOF
+
+CONSULTANDO ALIAS EMPRESA
+
+curl -X GET http://20.0.0.131:9200/empresaS?pretty
+
+FILTRANDO REGISTROS COM O ALIAS EMPRESAS  
+
+curl -X GET "http://20.0.0.131:9200/EMPRESAS/_search?q=nome:Marcus&pretty"
+
+CONSULTANDO O ALIAS VIP
+curl -X GET http://20.0.0.131:9200/vip?pretty
+
+FILTRANDO REGISTROS COM O ALIAS VIP  
+curl -X GET "http://20.0.0.131:9200/vip/_search?pretty"
+
+REMOVENDO ALIASES
+curl -X POST "http://20.0.0.131:9200/_aliases" -H 'Content-Type: application/json' -d@- <<EOF
+{
+    "actions" : [
+        { "remove" : { "index" : "matriz", "alias" : "vip" } },
+        { "remove" : { "index" : "filial", "alias" : "vip" } }
+    ]
+}
+
+
+

@@ -1,0 +1,34 @@
+Módulo Elasticsaerch-Hadoop
+
+export JAVA_HOME="/usr/lib/jvm/jre"
+export HADDOP_HOME="/opt/hadoop-2.9.2"
+export HADOOP_CONF_DIR="/opt/hadoop-2.9.2/etc/hadoop" 
+export PIG_HOME="/opt/pig-0.16.0"
+export PIG_CONF_DIR="$PIG_HOME/conf"
+export PATH="$PIG_HOME/bin:$PATH"
+export PIG_CLASSPATH="/opt/hadoop-2.9.2/etc/hadoop/"
+export PATH=$PATH:/opt/hadoop-2.9.2/bin
+
+
+https://maven.repository.redhat.com/nexus/content/groups/product-ga/commons-httpclient/commons-httpclient/3.1.0.redhat-8/commons-httpclient-3.1.0.redhat-8.jar
+
+grunt> REGISTER /opt/elasticsearch-hadoop-6.3.1/dist/elasticsearch-hadoop-pig-6.3.1.jar;
+grunt> REGISTER '/opt/pig-0.17.0/lib/piggybank.jar';
+grunt> REGISTER '/opt/pig-0.17.0/lib/commons-httpclient-3.1.0.redhat-8.jar';
+grunt> DEFINE ApacheCombinedLogLoader org.apache.pig.piggybank.storage.apachelog.CombinedLogLoader();
+grunt> logs = LOAD '/logs/access.log' USING ApacheCombinedLogLoader AS (addr: chararray, logname: chararray, user: chararray, time: chararray, method: chararray, uri: chararray, proto: chararray, status: int, bytes: int);
+grunt> DEFINE Elastic org.elasticsearch.hadoop.pig.EsStorage('es.resource.write=apache/logs','es.nodes=10.10.10.2','es.index.auto.create=true');
+grunt> STORE logs into 'apache/logs' using Elastic();
+
+
+(addr:chararray, logname:chararray, user:chararray, time:chararray, method:chararray, uri:chararray, proto:chararray, status:chararray, bytes:chararray)
+
+
+REGISTER '/opt/pig-0.16.0/lib/commons-httpclient-3.1.0.redhat-8.jar';
+REGISTER '/opt/pig-0.16.0/lib/piggybank.jar';
+REGISTER /opt/elasticsearch-hadoop-6.3.1/dist/elasticsearch-hadoop-pig-6.3.1.jar;
+DEFINE ApacheCombined org.apache.pig.piggybank.storage.apachelog.CombinedLogLoader();
+DEFINE Elastic org.elasticsearch.hadoop.pig.EsStorage('es.resource.write=apache2/log','es.nodes=10.10.10.2','es.index.auto.create=true');
+logs = LOAD '/logs/access.log' USING ApacheCombined AS (addr: chararray, logname: chararray, user: chararray, time: chararray, method: chararray, uri: chararray, proto: chararray, status: int, bytes: int);
+STORE logs INTO 'apache2/log' using Elastic();
+

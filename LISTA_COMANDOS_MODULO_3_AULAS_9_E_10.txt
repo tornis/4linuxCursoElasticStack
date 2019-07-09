@@ -1,0 +1,269 @@
+@ COMANDOS UTILIZADOS NA AULA ADMINISTRANDO E MONITORANDO CLUSTER
+
+# Comandos do CLUSTER API
+curl -X GET http://10.10.10.2:9200/_cluster/health?pretty
+curl -X GET http://10.10.10.2:9200/_cluster/health/host1,host2?pretty
+curl -X GET http://10.10.10.2:9200/_cluster/health/indice?level=shards
+curl -X GET http://10.10.10.2:9200/_cluster/state?pretty
+curl -X GET  http://10.10.10.2:9200/_cluster/state/{metrics}/{indices}
+curl -X GET http://10.10.10.2:9200/_cluster/stats?human&pretty
+curl -X GET  http://10.10.10.2:9200/_cluster/stats/nodes/node1,node*,master:false
+curl -X GET http://10.10.10.2:9200/_cluster/pending_tasks
+curl -X GET http://10.10.10.2:9200/_cluster/settings?include_defaults=true
+
+# Comandos do Nodes API
+curl -X GET http://10.10.10.2:9200/_cluster/settings
+curl -X PUT http://10.10.10.2:9200/_cluster/settings -d@- << EOF
+{
+    "persistent" : {
+        "indices.recovery.max_bytes_per_sec" : "50mb"
+    }
+}
+EOF
+
+curl -X GET http://10.10.10.2:9200/_nodes/stats?human&pretty
+curl -X GET http://10.10.10.2:9200/_nodes/stats/process?human&pretty
+curl -X GET http://10.10.10.2:9200/_nodes
+curl -X GET http://10.10.10.2:9200/_nodes/jvm,process
+curl -X GET http://10.10.10.2:9200/_nodes/usage
+curl -X GET http://10.10.10.2:9200/_nodes/node1,node2/usage
+curl -X GET http://10.10.10.2:9200/_tasks
+curl -X GET http://10.10.10.2:9200/_tasks?nodes=node1,node2
+curl -X GET http://10.10.10.2:9200/_tasks?actions=*search&detailed
+curl -X POST http://10.10.10.2:9200/_tasks/oTUltX4IQMOUUVeiohTt8A:12345/_cancel
+curl -X GET http://10.10.10.2:9200/_cat/master?v
+curl -X GET http://10.10.10.2:9200/_cat/master?help
+curl -X GET http://10.10.10.2:9200/_cat/nodes?h=ip,port,heapPercent,name
+curl -X GET http://10.10.10.2:9200/_cat/master?format=json&pretty
+curl -X GET http://10.10.10.2:9200/_cat/templates?v&s=order:desc,index_patterns
+curl -X GET http://10.10.10.2:9200/_cat/health?v
+curl -X GET http://10.10.10.2:9200/_cat/indices/twi*?v&s=index
+curl -X GET http://10.10.10.2:9200/_cat/nodes?v&h=id,ip,port,v,m
+curl -X GET http://10.10.10.2:9200/_cat/segments?v
+curl -X GET http://10.10.10.2:9200/_cat/shards/indice*
+
+# Comando Index API
+curl -X POST http://10.10.10.2:9200/indice/_close
+curl -X POST http://10.10.10.2:9200/indice/_open
+
+curl -X PUT http://10.10.10.2:9200/testa/_settings -H "Content-type: application/json" -d@- << EOF
+{
+  "settings": {
+    "index.routing.allocation.require._name": "node_data01", 
+    "index.blocks.write": true 
+  }
+}
+EOF
+
+curl -X GET http://10.10.10.2:9200/indice/_stats
+curl -X GET http://10.10.10.2:9200/indice/_segments
+curl -X PUT http://10.10.10.2:9200/indice/_forcemerge
+curl -X PUT http://10.10.10.2:9200/indice/_forcemerge
+curl -X PUT http://10.10.10.2:9200/indice/_refresh
+curl -X PUT http://10.10.10.2:9200/indice/_cache
+
+# Comandos para Shirink
+curl -X PUT http://10.10.10.2:9200/database-2019.02.10/_settings -H "Content-type: application/json" -d@- << EOF
+{
+  "settings": {
+    "index.routing.allocation.require._ip": "10.10.10.2",
+    "index.blocks.write": true
+  }
+}
+EOF
+
+curl -X PUT http://10.10.10.2:9200/database-2019.02.10/_shrink/database-new -H 'Content-type: application/json' -d@- << EOF
+{
+  "settings": {
+    "index.number_of_replicas": 1,
+    "index.number_of_shards": 1, 
+    "index.codec": "best_compression" 
+  }
+}
+EOF
+
+
+# Instalação do Cerebro
+mkdir -p /opt/cerebro
+cd /opt/cerebro
+wget https://github.com/lmenezes/cerebro/releases/download/v0.8.1/cerebro-0.8.1.zip
+unzip cerebro-0.8.1.zip
+
+firewall-cmd --zone=public --add-port=9000/tcp --permanent
+firewall-cmd --reload
+
+mv cerebro-0.8.1 cerebro
+cd cerebro 
+./bin/cerebro &
+
+# Instalação do Curator
+yum install epel-release-7-11.noarch -y
+yum install  python34-pip -y
+pip3 install elasticsearch-curator
+
+# Comandos do Curator
+curator_cli --config /etc/curator/curator.yml /etc/curator/delete_action.yml --dry-run
+curator --config /etc/curator/curator.yml /etc/curator/delete_action.yml  --dry-run
+curator_cli --config /etc/curator/curator.yml delete_indices --filter_list '[{"filtertype":"none"}]'
+curator_cli --config /etc/curator/curator.yml delete_indices --filter_list '[{"filtertype":"age","source":"creation_date","direction":"older","unit":"days","unit_count":13},{"filtertype":"pattern","kind":"prefix","value":"logstash"}]'
+
+# Arquivo de configuração do Curator - config.yml
+client:
+  hosts:
+    - 10.10.10.2
+  port: 9200
+  url_prefix:
+  use_ssl: False
+  certificate:
+  client_cert:
+  client_key:
+  aws_key:
+  aws_secret_key:
+  aws_region:
+  ssl_no_validate: False
+  http_auth:
+  timeout: 30
+  master_only: False
+logging:
+  loglevel: INFO
+  logfile:
+  logformat: default
+  blacklist: ['elasticsearch', 'urllib3']
+
+
+# Arquivo de rules do curator 
+
+actions:
+  1:
+    action: delete_indices
+    description: >-
+      Delete indices older than 45 days (based on index name), for logstash-
+      prefixed indices. Ignore the error if the filter does not result in an
+      actionable list of indices (ignore_empty_list) and exit cleanly.
+    options:
+      ignore_empty_list: True
+      disable_action: True
+    filters:
+    - filtertype: pattern
+      kind: prefix
+      value: logstash-
+    - filtertype: age
+      source: name
+      direction: older
+      timestring: '%Y.%m.%d'
+      unit: days
+      unit_count: 45
+
+
+
+ # ElastAlert
+
+mkdir -p /etc/elastalert/rules
+vi /etc/elastalert/config.yaml 
+
+# config.yaml
+rules_folder: /etc/elastalert/rules
+run_every:
+  minutes: 1
+buffer_time:
+  minutes: 15
+es_host: 10.10.10.2
+es_port: 9200
+writeback_index: elastalert_status
+alert_time_limit:
+  days: 2
+
+vi /etc/elastalert/rules/by_frequencia.yaml
+# Rules por frequencia
+name: Teste de Regra
+type: frequency
+index: logstash-*
+num_events: 10
+timeframe:
+  hours: 4
+filter:
+- term:
+    response: "500"
+alert:
+- "email"
+email:
+- "rtornis@gmail.com"
+
+# Rodando o ElastAlert
+elastalert-test-rule --config /etc/elastalert/config.yaml /etc/elastalert/rules/by_frequencia.yaml
+elastalert-create-index
+python -m elastalert.elastalert --config /etc/elastalert/config.yaml --verbose --rule /etc/elastalert/rules/by_frequencia.yaml
+
+
+# Trecho de exemplo para testes do ElastAlert
+104.236.196.8 - - [05/Aug/2015:00:33:56 +0200] "GET / HTTP/1.1" 500 297 "-" "Mozilla/4.0 (compatible; MSIE 5.5; Windows 98)"
+
+
+@Kibana 
+
+# Exemplo de sintax do TimeLion 
+
+.es(index=metricbeat-*, timefield='@timestamp', metric='max:system.memory.actual.used.bytes'), 
+.es(index=metricbeat-*, timefield='@timestamp', metric='max:system.memory.actual.used.bytes').
+	if(gt,12500000000,
+		.es(index=metricbeat-*, timefield='@timestamp', metric='max:system.memory.actual.used.bytes'),null).label('warning').color('#FFCC11'), 
+.es(index=metricbeat-*, timefield='@timestamp', metric='max:system.memory.actual.used.bytes').
+	if(gt,15000000000,
+		.es(index=metricbeat-*, timefield='@timestamp', metric='max:system.memory.actual.used.bytes'),null).label('severe').color('red'), 
+
+.es(index=logstash-*,timefield=data_original,q=geoip.country_code2:DE).label(Alemanha)
+	.if(gt,1000,
+		.es(index=logstash-*,timefield=data_original,q=geoip.country_code2:DE).label(Alemanha).color(red).points()),
+
+.es(index=logstash-*,timefield=data_original,q=geoip.country_code2:US).label(USA).lines(fill=1,width=0.5).color(red).title("Acesso por País").legend(columns=2,position=nw)
+
+# Sintax do Vega
+
+{
+
+// Carregamento do vega-lite
+
+  $schema: https://vega.github.io/schema/vega-lite/v2.json
+  title: Event counts from all indexes
+
+
+// Sessão onde os dados se encontram
+  data: {
+    url: {
+    %context%: true
+    %timefield%: data_original
+      index: logstash-*
+      body: {
+        size: 1000
+        _source: ["data_original","request", "response","clientip","bytes","geoip.country_code2"]
+      }
+    }
+    format: {property: "hits.hits"}
+  }
+  
+  transform: [{
+      calculate: "toDate(datum._source['data_original'])", as: "time"  
+    }]
+  
+  mark: point
+  encoding: {
+    x: {
+      field: "time"
+      type: "temporal" 
+    }
+    y: {
+      field: "_source.bytes"
+      type: "quantitative"
+    }
+    size: {
+      field: "_source.response", type: "nominal"
+    }
+    color: {
+      field:"_source.response", type: "nominal"
+    }
+    shape: {
+      field: "_source.response", type: "nominal"
+    }
+  }
+}
+
