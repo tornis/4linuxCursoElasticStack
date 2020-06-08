@@ -13,16 +13,16 @@ curl -X DELETE http://20.0.0.131:9200/teste3?pretty
 
 
 INSERINDO DOCUMENTO
-curl -X POST "http://locallhost:9200/banco/tabela/codigo01?pretty" -H 'Content-Type: application/json'  -d "{ \"nome\":\"fulano\"}" 
+curl -X POST "http://locallhost:9200/banco/_doc/codigo01?pretty" -H 'Content-Type: application/json'  -d "{ \"nome\":\"fulano\"}" 
 
 ATUALIZANDO DOCUMENTO
-curl -X POST "http://20.0.0.131:9200/banco/tabela/codigo01?pretty" -H 'Content-Type: application/json'  -d "{ \"nome\":\"fulano\"}"
+curl -X POST "http://20.0.0.131:9200/banco/_doc/codigo01?pretty" -H 'Content-Type: application/json'  -d "{ \"nome\":\"fulano\"}"
 
 CONSULTANDO DOCUMENTO
 curl -X POST "http://20.0.0.131:9200/banco/_search?pretty" -H 'Content-Type: application/json'  -d "{ \"query\": { \"match\" : { \"chave\" : \"valor2\" }}}"
 
 DELETANDO DOCUMENTO
-curl -X DELETE "http://20.0.0.131:9200/banco/tabela/codigo01?pretty"
+curl -X DELETE "http://20.0.0.131:9200/banco/_doc/codigo01?pretty"
 
 CONSULTANDO SETTINGS DO INDICE
 curl -X GET http://20.0.0.131:9200/teste?pretty
@@ -40,7 +40,6 @@ curl -X GET "http://20.0.0.131:9200/_template/meu_template?pretty"
 {
   "template": "banco*",
   "mappings": {
-    "meu_tipo": {
       "dynamic_templates": [
         {
           "regra1": {
@@ -60,14 +59,9 @@ curl -X GET "http://20.0.0.131:9200/_template/meu_template?pretty"
         }
       ]
     }
-  }
 }
 
 ******************************************************
-
-
-
-
 
 
 
@@ -103,7 +97,7 @@ EOF
 
 # INSERINDO DOCUMENTO NO INDICE MATRIZ
 
-curl -X PUT "http://20.0.0.131:9200/matriz/parceiro/1?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+curl -X PUT "http://20.0.0.131:9200/matriz/_doc/1?pretty" -H 'Content-Type: application/json' -d@- <<EOF
 {
     "codigo" : "0001",
     "nome" : "Juquinha da Selva",
@@ -111,7 +105,7 @@ curl -X PUT "http://20.0.0.131:9200/matriz/parceiro/1?pretty" -H 'Content-Type: 
 }
 EOF
 
-curl -X PUT "http://20.0.0.131:9200/matriz/parceiro/2?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+curl -X PUT "http://20.0.0.131:9200/matriz/_doc/2?pretty" -H 'Content-Type: application/json' -d@- <<EOF
 {
     "codigo" : "0002",
     "nome" : "Gabi Gol",
@@ -119,7 +113,7 @@ curl -X PUT "http://20.0.0.131:9200/matriz/parceiro/2?pretty" -H 'Content-Type: 
 }
 EOF
 
-curl -X PUT "http://20.0.0.131:9200/matriz/parceiro/3?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+curl -X PUT "http://20.0.0.131:9200/matriz/_doc/3?pretty" -H 'Content-Type: application/json' -d@- <<EOF
 {
     "codigo" : "0003",
     "nome" : "Marcus das Neves",
@@ -129,7 +123,7 @@ EOF
 
 # Dados da Filial
 
-curl -X PUT "http://20.0.0.131:9200/filial/parceiro/1?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+curl -X PUT "http://20.0.0.131:9200/filial/_doc/1?pretty" -H 'Content-Type: application/json' -d@- <<EOF
 {
     "codigo" : "0001",
     "nome" : "Juquinha da Selva FILIAL",
@@ -137,7 +131,7 @@ curl -X PUT "http://20.0.0.131:9200/filial/parceiro/1?pretty" -H 'Content-Type: 
 }
 EOF
 
-curl -X PUT "http://20.0.0.131:9200/filial/parceiro/2?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+curl -X PUT "http://20.0.0.131:9200/filial/_doc/2?pretty" -H 'Content-Type: application/json' -d@- <<EOF
 {
     "codigo" : "0002",
     "nome" : "Gabi Gol FILIAL",
@@ -145,7 +139,7 @@ curl -X PUT "http://20.0.0.131:9200/filial/parceiro/2?pretty" -H 'Content-Type: 
 }
 EOF
 
-curl -X PUT "http://20.0.0.131:9200/filial/parceiro/3?pretty" -H 'Content-Type: application/json' -d@- <<EOF
+curl -X PUT "http://20.0.0.131:9200/filial/_doc/3?pretty" -H 'Content-Type: application/json' -d@- <<EOF
 {
     "codigo" : "0003",
     "nome" : "Marcus das Neves FILIAL",
