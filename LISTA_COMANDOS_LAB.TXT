@@ -70,13 +70,11 @@ CRIANDO INDICE COM MAPEAMENTO POR CAMPO
 curl -X PUT "http://20.0.0.131:9200/matriz?pretty" -H 'Content-Type: application/json' -d@- <<EOF
 {
   "mappings": {
-    "parceiro": {
       "properties": {
         "tipo_parceiro" : {
           "type": "keyword"
         }
       }
-    }
   }
 }
 EOF
